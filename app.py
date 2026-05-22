@@ -1,6 +1,6 @@
 """
 OBSERVATÓRIO DE TURISMO — UFPR
-Painel único | Empregabilidade · Cadastur · Fluxo PNI
+Painel único | Empregabilidade · Cadastur · Fluxo de Turistas
 """
 
 import streamlit as st
