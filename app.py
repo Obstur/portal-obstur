@@ -2,130 +2,110 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# ==================== CONFIGURAÇÃO DA PÁGINA ====================
-st.set_page_config(
-    page_title="Observatório de Turismo",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="Observatório", layout="wide")
 
-# Estilo Minimalista Premium
 st.markdown("""
     <style>
-    .stApp { background-color: #FFFFFF; color: #1E1E1E; font-family: 'Inter', sans-serif; }
-    h1, h2, h3 { color: #111111; font-weight: 700; letter-spacing: -0.5px; }
-    .stTabs [data-baseweb="tab-list"] { gap: 16px; border-bottom: 2px solid #F0F0F0; }
-    .stTabs [data-baseweb="tab"] { height: 45px; background-color: transparent; border-radius: 0px; padding: 10px 20px; color: #666666; font-weight: 500; }
-    .stTabs [aria-selected="true"] { color: #0066FF; border-bottom: 2px solid #0066FF; font-weight: 600; }
+    .stApp { background-color: #FFFFFF; color: #1E1E1E; }
+    .stTabs [data-baseweb="tab-list"] { border-bottom: 2px solid #F0F0F0; }
     div[data-testid="stMetricValue"] { color: #0066FF; font-size: 32px; font-weight: 700; }
-    div[data-testid="stMetricLabel"] { color: #666666; font-size: 14px; font-weight: 500; }
     </style>
 """, unsafe_allow_html=True)
 
-# Logo
 try:
     st.image("logo.jpg", width=220)
-except:
-    st.title("Observatório de Turismo")
+except Exception:
+    pass
 
-st.title("📊 Observatório de Turismo")
+URL_EMP = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQT-EtDg1pO7uGcQf8yHNiLKb2euWDVDOP84yaZKzOPQNlssQbhbR4kSHJ5HNqbVt1NS8VPFsFDm5dp/pub?output=csv"
+URL_CAD = "https://docs.google.com/spreadsheets/d/e/2PACX-1vScKBQfjVOP_WRtCo7QilgnPPGh3cA2VCT-RUnrJ_KoxxLixbTmcFAsfuG9EONT5F7bciZIBCn6Rwmw/pub?output=csv"
+URL_FLX = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQKgD0hlDacayEi-hCuWnZC37z-etoULtAG0DTrmnVbAMJc_A3Eo_EqapaE_3hCkA8Dudcv3kdOFbbT/pub?output=csv"
 
-# ==================== LINKS DAS PLANILHAS ====================
-URL_EMPREGABILIDADE = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQT-EtDg1pO7uGcQf8yHNiLKb2euWDVDOP84yaZKzOPQNlssQbhbR4kSHJ5HNqbVt1NS8VPFsFDm5dp/pub?output=csv"
-URL_CADASTUR = "https://docs.google.com/spreadsheets/d/e/2PACX-1vScKBQfjVOP_WRtCo7QilgnPPGh3cA2VCT-RUnrJ_KoxxLixbTmcFAsfuG9EONT5F7bciZIBCn6Rwmw/pub?output=csv"
-URL_FLUXO = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQKgD0hlDacayEi-hCuWnZC37z-etoULtAG0DTrmnVbAMJc_A3Eo_EqapaE_3hCkA8Dudcv3kdOFbbT/pub?output=csv"
-
-# ==================== FUNÇÃO DE LIMPEZA ====================
-def limpar_numeros(val):
-    if pd.isna(val):
-        return 0.0
+def limpar_num(val):
+    if pd.isna(val): return 0.0
     s = str(val).strip().replace(' ', '').replace('%', '')
-    if not s or s in ['-', 'None', '']:
-        return 0.0
-    try:
-        return float(s)
-    except ValueError:
-        pass
+    if not s or s in ['-', 'None', '']: return 0.0
     if ',' in s and '.' in s:
         s = s.replace('.', '').replace(',', '.')
     elif ',' in s:
         s = s.replace(',', '.')
+    try: return float(s)
+    except Exception: return 0.0
+
+@st.cache_data(ttl=60)
+def processar(url, chave):
     try:
-        return float(s)
-    except ValueError:
-        return 0.0
+        df = pd.read_csv(url, header=None).dropna(how='all')
+        
+        idx = 0
+        for i in range(5):
+            txt = str(df.iloc[i, 0]).lower()
+            if 'm' in txt or 'a' in txt:
+                idx = i
+                break
+                
+        df_c = df.iloc[idx:].copy()
+        df_c.columns = df_c.iloc[0]
+        df_c = df_c.iloc[1:]
+        
+        df_c.columns.values[0] = chave
+        df_c = df_c.dropna(subset=[chave])
+        df_c = df_c[~df_c[chave].astype(str).str.lower().str.contains('total|fonte')]
+        
+        dft = df_c.set_index(chave).T.reset_index()
+        dft.rename(columns={dft.columns[0]: 'Mes'}, inplace=True)
+        dft = dft[dft['Mes'].astype(str).str.strip() != '']
+        
+        for c in dft.columns:
+            if c != 'Mes':
+                dft[c] = dft[c].apply(limpar_num)
+        return dft
+    except Exception:
+        return pd.DataFrame()
 
-# ==================== PROCESSADOR DE PLANILHAS ====================
-@st.cache_data(ttl=300)
-def processar_base_turismo(url):
-    try:
-        df_raw = pd.read_csv(url, header=None).dropna(how='all')
-        
-        # Normaliza primeira coluna para busca
-        col0 = df_raw[0].astype(str).str.strip().str.lower()
-        
-        # Busca linha de cabeçalho dos meses (mais robusto)
-        mask_meses = col0.str.contains(r'mês|meses|periodo|competência', na=False, regex=True)
-        linha_meses_idx = col0[mask_meses].index
-        
-        if len(linha_meses_idx) == 0:
-            st.warning("Não encontrou linha de meses automaticamente.")
-            return df_raw, None
-        
-        idx = linha_meses_idx[0]
-        
-        # Extrai cabeçalhos
-        headers = df_raw.iloc[idx].values
-        df = df_raw.iloc[idx+1:].copy()
-        df.columns = headers
-        
-        # Limpa números
-        for col in df.columns:
-            if df[col].dtype == 'object':
-                df[col] = df[col].apply(limpar_numeros)
-        
-        return df, headers
-        
-    except Exception as e:
-        st.error(f"Erro ao processar planilha: {e}")
-        return None, None
+df_e = processar(URL_EMP, 'Setor')
+df_c = processar(URL_CAD, 'Categoria')
+df_f = processar(URL_FLX, 'Atrativo')
 
-# ==================== INTERFACE ====================
-tab1, tab2, tab3 = st.tabs(["Empregabilidade", "Cadastur", "Fluxo Turístico"])
+st.title("📊 Painel de Controle - Observatório")
+st.markdown("---")
 
-with tab1:
-    st.subheader("Empregabilidade no Turismo")
-    with st.spinner("Carregando dados de Empregabilidade..."):
-        df_emp, headers_emp = processar_base_turismo(URL_EMPREGABILIDADE)
-    
-    if df_emp is not None:
-        st.dataframe(df_emp, use_container_width=True)
+aba1, aba2, aba3 = st.tabs(["💼 Empregabilidade", "📝 Cadastur", "✈️ Fluxo"])
+
+def aplicar_graf(fig, titulo_y):
+    fig.update_layout(
+        plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)",
+        margin=dict(l=50, r=20, t=50, b=50), height=450
+    )
+    fig.update_yaxes(title_text=titulo_y)
+    return fig
+
+with aba1:
+    if not df_e.empty:
+        cols = [c for c in df_e.columns if c != 'Mes']
+        c1, c2, c3 = st.columns(3)
+        c1.metric("Saldo Acumulado", f"{int(df_e[cols].sum().sum()):,}".replace(',', '.'))
+        c2.metric("Principal Setor", df_e[cols].sum().idxmax())
+        c3.metric("Meses Analisados", len(df_e))
         
-        # Exemplo de gráfico automático
-        if len(df_emp.columns) > 1:
-            fig = px.bar(df_emp, x=df_emp.columns[0], y=df_emp.columns[1:],
-                        title="Evolução por Mês")
-            st.plotly_chart(fig, use_container_width=True)
-
-with tab2:
-    st.subheader("Cadastur")
-    with st.spinner("Carregando dados do Cadastur..."):
-        df_cad, headers_cad = processar_base_turismo(URL_CADASTUR)
-    
-    if df_cad is not None:
-        st.dataframe(df_cad, use_container_width=True)
-
-with tab3:
-    st.subheader("Fluxo Turístico")
-    with st.spinner("Carregando dados de Fluxo..."):
-        df_fluxo, headers_fluxo = processar_base_turismo(URL_FLUXO)
-    
-    if df_fluxo is not None:
-        st.dataframe(df_fluxo, use_container_width=True)
+        dfm = df_e.melt(id_vars=['Mes'], var_name='Setor', value_name='Saldo')
+        fig1 = px.line(dfm, x='Mes', y='Saldo', color='Setor', template="plotly_white", markers=True)
+        st.plotly_chart(aplicar_graf(fig1, "Saldo"), use_container_width=True)
         
-        if len(df_fluxo.columns) > 1:
-            fig2 = px.line(df_fluxo, x=df_fluxo.columns[0], y=df_fluxo.columns[1:],
-                          title="Fluxo Turístico ao Longo do Tempo")
-            st.plotly_chart(fig2, use_container_width=True)
+        df_b = df_e[cols].sum().reset_index()
+        df_b.columns = ['Setor', 'Total']
+        fig2 = px.bar(df_b.sort_values(by='Total'), x='Total', y='Setor', orientation='h', template="plotly_white")
+        st.plotly_chart(aplicar_graf(fig2, ""), use_container_width=True)
 
-st.caption("Observatório de Turismo • Atualização automática via Google Sheets")
+with aba2:
+    if not df_c.empty:
+        dfm2 = df_c.melt(id_vars=['Mes'], var_name='Cat', value_name='Total')
+        fig3 = px.line(dfm2, x='Mes', y='Total', color='Cat', template="plotly_white", markers=True)
+        st.plotly_chart(aplicar_graf(fig3, "Prestadores"), use_container_width=True)
+
+with aba3:
+    if not df_f.empty:
+        dfm3 = df_f.melt(id_vars=['Mes'], var_name='Atrativo', value_name='Total')
+        fig4 = px.line(dfm3, x='Mes', y='Total', color='Atrativo', template="plotly_white", markers=True)
+        st.plotly_chart(aplicar_graf(fig4, "Visitantes"), use_container_width=True)
+        
