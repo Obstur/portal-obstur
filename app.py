@@ -295,7 +295,7 @@ display:flex;align-items:center;gap:16px;margin-bottom:24px;">
 """, unsafe_allow_html=True)
 
 # ── ABAS ──────────────────────────────────────────────────────────────────────
-aba1, aba2, aba3 = st.tabs(["📊  Empregabilidade", "🏨  Cadastur", "✈️  Fluxo — PNI"])
+aba1, aba2, aba3 = st.tabs(["📊  Empregabilidade", "🏨  Cadastur", "✈️  Fluxo de Turistas"])
 
 # ════════════════════════════════════════════════════
 # ABA 1 — EMPREGABILIDADE
