@@ -21,12 +21,12 @@ C2 = "#20729b"
 C3 = "#155a81"
 C4 = "#0b4166"
 C5 = "#00294c"
-BG    = "#3a3a3a"
-BG2   = "#444444"
-CARD  = "#4a4a4a"
-BORDER= "#555555"
-TEXT  = "#f0f0f0"
-MUTED = "#b0b0b0"
+BG    = "#e9f2f9"
+BG2   = "#d6e8f4"
+CARD  = "#c8dff0"
+BORDER= "#a8c8e0"
+TEXT  = "#0b3a5a"
+MUTED = "#4a7a9b"
 
 # ── CSS ───────────────────────────────────────────────────────────────────────
 st.markdown(f"""
@@ -243,7 +243,7 @@ def grafico_linha(labels, series, title="", height=280):
             marker=dict(size=6, color=cor),
             connectgaps=False,
             fill="tozeroy" if len(series) == 1 else "none",
-            fillcolor=cor + "22",
+            fillcolor=f"rgba({int(cor[1:3],16)},{int(cor[3:5],16)},{int(cor[5:7],16)},0.15)",
         ))
     fig.update_layout(**layout_base(height=height, title=title))
     return fig
