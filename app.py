@@ -4,12 +4,12 @@ import plotly.express as px
 
 st.set_page_config(page_title="Observatório de Turismo", layout="wide")
 
+# CSS - Fundo Branco e Logo
 st.markdown("""
     <style>
     .stApp { background-color: #FFFFFF; color: #1E1E1E; }
-    [data-testid="stSidebar"] { background-color: #F8F9FA; border-right: 1px solid #EEE; }
-    .stMetric { border: 1px solid #F0F0F0; padding: 15px; border-radius: 10px; }
-    div[data-testid="stMetricValue"] { color: #0066FF; font-weight: 700; }
+    [data-testid="stSidebar"] { background-color: #F8F9FA; }
+    div[data-testid="stMetricValue"] { color: #0066FF; font-size: 28px; font-weight: bold; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -17,106 +17,98 @@ URL_EMP = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQT-EtDg1pO7uGcQf8yHN
 URL_CAD = "https://docs.google.com/spreadsheets/d/e/2PACX-1vScKBQfjVOP_WRtCo7QilgnPPGh3cA2VCT-RUnrJ_KoxxLixbTmcFAsfuG9EONT5F7bciZIBCn6Rwmw/pub?output=csv"
 URL_FLX = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQKgD0hlDacayEi-hCuWnZC37z-etoULtAG0DTrmnVbAMJc_A3Eo_EqapaE_3hCkA8Dudcv3kdOFbbT/pub?output=csv"
 
-def limpar_num(val):
-    if pd.isna(val): return 0.0
-    s = str(val).strip().replace(' ', '').replace('%', '')
-    if not s or s in ['-', 'None', '']: return 0.0
-    s = s.replace('.', '').replace(',', '.')
-    try: return float(s)
-    except: return 0.0
-
 @st.cache_data(ttl=60)
-def carregar_e_limpar(url, chave):
+def carregar_dados(url):
     try:
-        df = pd.read_csv(url, header=None).dropna(how='all')
-        idx = 0
-        for i in range(5):
-            if 'm' in str(df.iloc[i,0]).lower() or 'a' in str(df.iloc[i,0]).lower():
-                idx = i
-                break
-        df_c = df.iloc[idx:].copy()
-        df_c.columns = df_c.iloc[0]
-        df_c = df_c.iloc[1:]
-        df_c.columns.values[0] = chave
-        df_c = df_c.dropna(subset=[chave])
-        df_c = df_c[~df_c[chave].astype(str).str.lower().str.contains('total|fonte')]
-        
-        dft = df_c.set_index(chave).T.reset_index()
-        dft.rename(columns={dft.columns[0]: 'Mes'}, inplace=True)
-        
-        dft['Ano'] = dft['Mes'].astype(str).str.extract('(\d{4})').fillna("2024")
-        dft['Mes_Nome'] = dft['Mes'].astype(str).str.replace('\d+', '', regex=True).str.strip().str.replace('/', '')
-        
-        for c in dft.columns:
-            if c not in ['Mes', 'Ano', 'Mes_Nome']:
-                dft[c] = dft[c].apply(limpar_num)
-        return dft
-    except: return pd.DataFrame()
+        df = pd.read_csv(url)
+        df.columns = df.columns.str.strip()
+        # Garante que o Ano não fica com ".0"
+        df['Ano'] = df['Ano'].astype(str).str.replace(".0", "", regex=False)
+        df['Mês'] = df['Mês'].astype(str).str.strip()
+        return df
+    except Exception:
+        return pd.DataFrame()
 
-df_e = carregar_e_limpar(URL_EMP, 'Setor')
-df_c = carregar_e_limpar(URL_CAD, 'Categoria')
-df_f = carregar_e_limpar(URL_FLX, 'Atrativo')
+df_emp = carregar_dados(URL_EMP)
+df_cad = carregar_dados(URL_CAD)
+df_fluxo = carregar_dados(URL_FLX)
 
-# Proteção para o logo lateral
+# --- SIDEBAR (FILTROS) ---
 try:
     st.sidebar.image("logo.jpg", use_container_width=True)
-except:
+except Exception:
     pass
 
-st.sidebar.title("Filtros de Visualização")
+st.sidebar.header("Filtros")
 
-lista_anos = sorted(df_e['Ano'].unique()) if not df_e.empty else ["2024"]
-ano_sel = st.sidebar.selectbox("Selecione o Ano", lista_anos)
+anos_disp = []
+if not df_cad.empty and 'Ano' in df_cad.columns: anos_disp.extend(df_cad['Ano'].unique())
+if not df_emp.empty and 'Ano' in df_emp.columns: anos_disp.extend(df_emp['Ano'].unique())
+anos_disp = sorted(list(set(anos_disp))) if anos_disp else ["2024"]
 
-df_e_f = df_e[df_e['Ano'] == ano_sel] if not df_e.empty else df_e
-df_c_f = df_c[df_c['Ano'] == ano_sel] if not df_c.empty else df_c
-df_f_f = df_f[df_f['Ano'] == ano_sel] if not df_f.empty else df_f
+ano_sel = st.sidebar.selectbox("Ano", anos_disp)
+mes_sel = st.sidebar.selectbox("Mês", ["Todos", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"])
 
-st.sidebar.markdown("---")
+def aplicar_filtros(df):
+    if df.empty or 'Ano' not in df.columns: return df
+    df_f = df[df['Ano'] == ano_sel]
+    if mes_sel != "Todos":
+        df_f = df_f[df_f['Mês'] == mes_sel]
+    return df_f
 
-col_logo, col_tit = st.columns([1, 4])
-with col_logo:
-    # Proteção para o logo do cabeçalho
+df_e_f = aplicar_filtros(df_emp)
+df_c_f = aplicar_filtros(df_cad)
+df_f_f = aplicar_filtros(df_fluxo)
+
+# --- CABEÇALHO (LOGO + TÍTULO) ---
+col1, col2 = st.columns([1, 8])
+with col1:
     try:
-        st.image("logo.jpg", width=120)
-    except:
+        st.image("logo.jpg", width=80)
+    except Exception:
         pass
-
-with col_tit:
-    st.title("Painel de Controle - Observatório de Turismo")
-    st.write(f"Visualizando dados consolidados de {ano_sel}")
+with col2:
+    st.markdown("<h1 style='margin-top:-15px;'>Painel de Controle - Observatório</h1>", unsafe_allow_html=True)
 
 st.markdown("---")
 
+# --- ABAS E GRÁFICOS ---
 aba1, aba2, aba3 = st.tabs(["💼 Empregabilidade", "📝 Cadastur", "✈️ Fluxo"])
 
+def gerar_grafico(df, x_col, y_col, color_col, titulo_y):
+    # Se um mês específico for escolhido, mostra gráfico de barras. Caso contrário, linha do tempo.
+    if mes_sel == "Todos":
+        fig = px.line(df, x=x_col, y=y_col, color=color_col, markers=True, template='plotly_white')
+    else:
+        fig = px.bar(df, x=color_col, y=y_col, color=color_col, template='plotly_white')
+    
+    fig.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)", margin=dict(l=0, r=0, t=30, b=0))
+    fig.update_yaxes(title_text=titulo_y)
+    return fig
+
 with aba1:
-    if not df_e_f.empty:
-        setores = [c for c in df_e_f.columns if c not in ['Mes', 'Ano', 'Mes_Nome']]
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Saldo Total", f"{int(df_e_f[setores].sum().sum()):,}".replace(',', '.'))
-        c2.metric("Melhor Desempenho", df_e_f[setores].sum().idxmax())
-        c3.metric("Meses Coletados", len(df_e_f))
-        
-        dfm = df_e_f.melt(id_vars=['Mes_Nome'], value_vars=setores, var_name='Setor', value_name='Saldo')
-        fig1 = px.line(dfm, x='Mes_Nome', y='Saldo', color='Setor', template="plotly_white", markers=True, title="Evolução Mensal")
-        st.plotly_chart(fig1, use_container_width=True)
-        
-        df_b = df_e_f[setores].sum().reset_index()
-        df_b.columns = ['Setor', 'Total']
-        fig2 = px.bar(df_b.sort_values(by='Total'), x='Total', y='Setor', orientation='h', template="plotly_white", title="Acumulado por Setor")
-        st.plotly_chart(fig2, use_container_width=True)
+    if not df_e_f.empty and 'Setor' in df_e_f.columns:
+        c1, c2 = st.columns(2)
+        c1.metric("Saldo Total", int(df_e_f['Saldo'].sum()))
+        c2.metric("Principal Setor", df_e_f.groupby('Setor')['Saldo'].sum().idxmax())
+        st.plotly_chart(gerar_grafico(df_e_f, 'Mês', 'Saldo', 'Setor', "Saldo"), use_container_width=True)
+    else:
+        st.info("Aguardando atualização das colunas (Ano | Mês | Setor | Saldo) no Google Sheets.")
 
 with aba2:
-    if not df_c_f.empty:
-        categorias = [c for c in df_c_f.columns if c not in ['Mes', 'Ano', 'Mes_Nome']]
-        dfm2 = df_c_f.melt(id_vars=['Mes_Nome'], value_vars=categorias, var_name='Categoria', value_name='Total')
-        fig3 = px.line(dfm2, x='Mes_Nome', y='Total', color='Categoria', template="plotly_white", markers=True, title="Prestadores Ativos")
-        st.plotly_chart(fig3, use_container_width=True)
+    if not df_c_f.empty and 'Categoria' in df_c_f.columns:
+        c1, c2 = st.columns(2)
+        c1.metric("Total de Registros", int(df_c_f['Total'].sum()))
+        c2.metric("Principal Categoria", df_c_f.groupby('Categoria')['Total'].sum().idxmax())
+        st.plotly_chart(gerar_grafico(df_c_f, 'Mês', 'Total', 'Categoria', "Registros"), use_container_width=True)
+    else:
+        st.info("Aguardando atualização das colunas (Ano | Mês | Categoria | Total) no Google Sheets.")
 
 with aba3:
-    if not df_f_f.empty:
-        atrativos = [c for c in df_f_f.columns if c not in ['Mes', 'Ano', 'Mes_Nome']]
-        dfm3 = df_f_f.melt(id_vars=['Mes_Nome'], value_vars=atrativos, var_name='Atrativo', value_name='Visitantes')
-        fig4 = px.line(dfm3, x='Mes_Nome', y='Visitantes', color='Atrativo', template="plotly_white", markers=True, title="Fluxo de Visitantes")
-        st.plotly_chart(fig4, use_container_width=True)
+    if not df_f_f.empty and 'Atrativo' in df_f_f.columns:
+        c1, c2 = st.columns(2)
+        c1.metric("Total de Visitantes", int(df_f_f['Visitantes'].sum()))
+        c2.metric("Principal Atrativo", df_f_f.groupby('Atrativo')['Visitantes'].sum().idxmax())
+        st.plotly_chart(gerar_grafico(df_f_f, 'Mês', 'Visitantes', 'Atrativo', "Visitantes"), use_container_width=True)
+    else:
+        st.info("Aguardando atualização das colunas (Ano | Mês | Atrativo | Visitantes) no Google Sheets.")
