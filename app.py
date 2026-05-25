@@ -1,4 +1,6 @@
 """
+
+
 OBSERVATORIO DE TURISMO - UFPR
 Painel unico | Empregabilidade | Cadastur | Fluxo Turistico
 
