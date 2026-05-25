@@ -1,6 +1,6 @@
 """
 OBSERVATÓRIO DE TURISMO — UFPR
-Painel único | Empregabilidade · Cadastur · Fluxo de Turistas
+Painel único | Empregabilidade · Cadastur · Fluxo PNI
 """
 
 import streamlit as st
@@ -287,15 +287,14 @@ display:flex;align-items:center;gap:16px;margin-bottom:24px;">
             Sistema de Inteligência Turística do Paraná · SITU / SETU
         </div>
     </div>
-    <div style="margin-left:auto;background:rgba(43,138,182,0.2);border:1px solid {C1};
-    padding:4px 14px;border-radius:20px;font-size:10px;color:{C1};letter-spacing:1px;">
-        ● AO VIVO
+    <div style="margin-left:auto;font-size:9px;color:#a8d4ea;letter-spacing:1px;">
+        Fonte: SITU / SETU · 2023–2026
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 # ── ABAS ──────────────────────────────────────────────────────────────────────
-aba1, aba2, aba3 = st.tabs(["📊  Empregabilidade", "🏨  Cadastur", "✈️  Fluxo de Turistas"])
+aba1, aba2, aba3 = st.tabs(["📊  Empregabilidade", "🏨  Cadastur", "✈️  Fluxo — PNI"])
 
 # ════════════════════════════════════════════════════
 # ABA 1 — EMPREGABILIDADE
@@ -333,7 +332,7 @@ with aba1:
 
     # Gráfico principal — linhas
     st.markdown('<div class="sec-title">Evolução Mensal por Setor</div>', unsafe_allow_html=True)
-    series_e = [(s, dados_ano.get(s, [None]*12), PALETA[i % len(PALETA)]) for i, s in enumerate(setores_plot)]
+    series_e = [(s, dados_ano.get(s, [None]*12), PALETA[i % len(PALETA)]) for i, s in enumerate(setores_plot) if s and dados_ano.get(s)]
     st.plotly_chart(grafico_linha(MESES_ABR, series_e, height=300), use_container_width=True)
 
     c1, c2, c3 = st.columns(3)
