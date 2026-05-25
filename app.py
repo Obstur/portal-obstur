@@ -1,6 +1,5 @@
 """
 
-
 OBSERVATÓRIO DE TURISMO — UFPR
 Painel único | Empregabilidade · Cadastur · Fluxo Turístico
 Lê dados reais do Google Sheets
