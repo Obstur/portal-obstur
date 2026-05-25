@@ -64,80 +64,32 @@ ORDEM_MES = {m: i for i, m in enumerate(MESES_FULL)}
 st.markdown(
     f"""
 <style>
-html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"], .stApp {{
-    background-color: {BG} !important;
-    color: {TEXT} !important;
-}}
-[data-testid="stHeader"], [data-testid="stToolbar"] {{
-    background-color: {BG} !important;
-}}
-.block-container {{
-    padding: 0 2rem 2rem 2rem !important;
-    max-width: 1400px;
-}}
-section[data-testid="stSidebar"] {{
-    display: none !important;
-}}
-.stTabs [data-baseweb="tab-list"] {{
-    background: {BG2} !important;
-    border-bottom: 2px solid {C3};
-    gap: 4px;
-    padding: 0 8px;
-    border-radius: 10px 10px 0 0;
-}}
-.stTabs [data-baseweb="tab"] {{
-    color: {MUTED} !important;
-    font-weight: 600;
-    font-size: 13px;
-    letter-spacing: 1px;
-    padding: 10px 22px;
-    background: transparent !important;
-}}
-.stTabs [aria-selected="true"] {{
-    color: {C1} !important;
-    border-bottom: 3px solid {C1} !important;
-    background: transparent !important;
-}}
-.stTabs [data-baseweb="tab-panel"] {{
-    background: {BG} !important;
-    padding-top: 1.5rem;
-}}
-div[data-testid="metric-container"] {{
-    background: {CARD} !important;
-    border: 1px solid {BORDER} !important;
-    border-top: 3px solid {C2} !important;
-    border-radius: 12px !important;
-    padding: 14px 16px !important;
-}}
-div[data-testid="metric-container"] label {{
-    color: {MUTED} !important;
-    font-size: 10px !important;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-}}
-div[data-testid="metric-container"] [data-testid="stMetricValue"] {{
-    color: {C1} !important;
-    font-size: 22px !important;
-    font-weight: 700 !important;
-}}
-.sec-title {{
-    font-size: 10px;
-    color: {MUTED};
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    border-bottom: 1px solid {BORDER};
-    padding-bottom: 6px;
-    margin: 16px 0 12px;
-}}
-.fonte {{
-    font-size: 9px;
-    color: {MUTED};
-    font-style: italic;
-    margin-bottom: 8px;
-}}
-hr {{
-    border-color: {BORDER} !important;
-}}
+div[style*="linear-gradient(135deg"] {
+    padding: 26px 28px 22px 28px !important;
+    margin-top: 18px !important;
+    min-height: 96px !important;
+    overflow: visible !important;
+    box-sizing: border-box !important;
+    align-items: center !important;
+    flex-wrap: wrap !important;
+}
+
+div[style*="linear-gradient(135deg"] > span {
+    line-height: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 42px !important;
+    min-height: 42px !important;
+}
+
+div[style*="linear-gradient(135deg"] > div {
+    min-width: 0 !important;
+}
+
+div[style*="linear-gradient(135deg"] > div:last-child {
+    flex-shrink: 0 !important;
+}
 </style>
 """,
     unsafe_allow_html=True,
