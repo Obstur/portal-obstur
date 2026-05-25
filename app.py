@@ -250,9 +250,9 @@ EMP_SETORES = [
 ]
 
 # ── HEADER ────────────────────────────────────────────────────────────────────
-st.markdown(f"""
+st.markdown("""
 <div class="header-painel">
-    <div class="header-icon">🧭</div>
+    <div class="header-icon">▣</div>
 
     <div class="header-texto">
         <div class="header-titulo">
@@ -264,7 +264,7 @@ st.markdown(f"""
     </div>
 
     <div class="header-live">
-        ● AO VIVO
+        AO VIVO
     </div>
 </div>
 """, unsafe_allow_html=True)
