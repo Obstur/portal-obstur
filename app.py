@@ -1,6 +1,7 @@
 """
 OBSERVATÓRIO DE TURISMO — UFPR
 Painel único | Empregabilidade · Cadastur · Fluxo Turístico
+Lê dados reais do Google Sheets
 """
 
 import streamlit as st
@@ -48,7 +49,8 @@ URL_CAD = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqGPUme21AUn8I9-rhiW
 URL_FLX = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRJm-ju6hjisM-TzBsOv1g--vyh_sKd8g_TP8IH50211oZSPyJPVT8P24UFUFvtm9gkqZugsg98nbez/pub?output=csv"
 
 MESES_ABR = ["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"]
-MESES_FULL = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"]
+MESES_FULL = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+              "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"]
 ORDEM_MES = {m:i for i,m in enumerate(MESES_FULL)}
 
 # ── CARREGAR DADOS ────────────────────────────────────────────────────────────
@@ -130,17 +132,18 @@ def grafico_barras(labels, valores, height=260, horizontal=False):
     cores = [C2 if (pd.notna(v) and float(v)>=0) else "#e74c3c" for v in valores]
     y_vals = [float(v) if pd.notna(v) else 0 for v in valores]
     if horizontal:
-        fig = go.Figure(go.Bar(y=labels, x=y_vals, orientation="h", marker_color=cores))
+        fig = go.Figure(go.Bar(y=labels, x=y_vals, orientation="h",
+            marker_color=cores, marker_line_width=0))
     else:
-        fig = go.Figure(go.Bar(x=labels, y=y_vals, marker_color=cores))
+        fig = go.Figure(go.Bar(x=labels, y=y_vals,
+            marker_color=cores, marker_line_width=0))
     fig.update_traces(marker=dict(cornerradius=4))
     lay = layout_base(height=height)
     lay["showlegend"] = False
     fig.update_layout(**lay)
     return fig
 
-def soma(serie): 
-    return serie.dropna().sum()
+def soma(serie): return serie.dropna().sum()
 
 # ── HEADER ────────────────────────────────────────────────────────────────────
 st.markdown(f"""
@@ -163,157 +166,204 @@ display:flex;align-items:center;gap:16px;margin-bottom:24px;">
 """, unsafe_allow_html=True)
 
 # ── ABAS ──────────────────────────────────────────────────────────────────────
-aba1, aba2, aba3 = st.tabs(["📊 Empregabilidade", "🏨 Cadastur", "✈️ Fluxo Turístico"])
+aba1, aba2, aba3 = st.tabs(["📊  Empregabilidade", "🏨  Cadastur", "✈️  Fluxo Turístico"])
 
 # ═══════════════════════════════════════════════════════
 # ABA 1 — EMPREGABILIDADE
 # ═══════════════════════════════════════════════════════
 with aba1:
     st.markdown('<p class="fonte">Fonte: SITU / Secretaria de Estado do Turismo — SETU</p>', unsafe_allow_html=True)
-    
+
     anos_emp = sorted(df_emp["ano"].dropna().unique().tolist()) if not df_emp.empty else [2023,2024,2025,2026]
     setores_emp = sorted(df_emp["setor"].dropna().unique().tolist()) if not df_emp.empty else []
-    
+
     f1,f2,f3 = st.columns(3)
-    with f1: ano_e = st.selectbox("Ano", anos_emp, index=len(anos_emp)-1, key="ae")
+    with f1: ano_e  = st.selectbox("Ano", anos_emp, index=len(anos_emp)-1, key="ae")
     with f2: setor_e = st.selectbox("Setor", ["Todos"]+setores_emp, key="se")
-    with f3: mes_e = st.selectbox("Mês", ["Todos"]+MESES_FULL, key="me")
-    
+    with f3: mes_e  = st.selectbox("Mês", ["Todos"]+MESES_FULL, key="me")
+
     dfe = df_emp[df_emp["ano"]==ano_e].copy()
     if setor_e != "Todos": dfe = dfe[dfe["setor"]==setor_e]
-    if mes_e != "Todos": dfe = dfe[dfe["mes"]==mes_e]
-    
+    if mes_e   != "Todos": dfe = dfe[dfe["mes"]==mes_e]
+
     saldo_total = soma(dfe["saldo"])
     acum = df_emp[df_emp["ano"]==ano_e].groupby("setor")["saldo"].sum()
     pos = (acum>0).sum(); neg = (acum<=0).sum()
     melhor = acum.idxmax() if not acum.empty else "—"
-    
+
     st.markdown("---")
     k1,k2,k3,k4 = st.columns(4)
-    k1.metric("Saldo Total do Período", f"{int(saldo_total):,}".replace(",",".") if pd.notna(saldo_total) else "0")
+    k1.metric("Saldo Total do Período", f"{int(saldo_total):,}".replace(",","."))
     k2.metric("Setores Positivos ✅", int(pos))
     k3.metric("Setores em Retração ⚠️", int(neg))
-    k4.metric("Setor Destaque", str(melhor).split()[0] if melhor != "—" else "—")
-    
+    k4.metric("Setor Destaque", str(melhor).split()[0] if melhor!="—" else "—")
     st.markdown("---")
+
+    # Gráfico principal — evolução mensal por setor
     st.markdown('<div class="sec-title">Evolução Mensal por Setor</div>', unsafe_allow_html=True)
-    
     setores_plot = setores_emp if setor_e=="Todos" else [setor_e]
     dfe_ano = df_emp[df_emp["ano"]==ano_e].copy()
-    
-    if not dfe_ano.empty:
-        dfe_ano["mes_idx"] = dfe_ano["mes"].map(mes_idx)
-        dfe_ano = dfe_ano.sort_values("mes_idx")
-        
-        series_e = []
-        for i, s in enumerate(setores_plot):
-            sub = dfe_ano[dfe_ano["setor"] == s].groupby("mes")["saldo"].sum()
-            vals = [sub.get(m, None) for m in MESES_FULL]
-            series_e.append((s, vals, PALETA[i % len(PALETA)]))
-        
-        st.plotly_chart(grafico_linha(MESES_ABR, series_e, height=300), 
-                        use_container_width=True, key="emp_evolucao_mensal")
-    else:
-        st.info("Sem dados disponíveis para o ano selecionado.")
+    dfe_ano["mes_idx"] = dfe_ano["mes"].map(mes_idx)
+    dfe_ano = dfe_ano.sort_values("mes_idx")
+
+    series_e = []
+    for i,s in enumerate(setores_plot):
+        sub = dfe_ano[dfe_ano["setor"]==s].set_index("mes")
+        vals = [sub.loc[m,"saldo"] if m in sub.index else None for m in MESES_FULL]
+        series_e.append((s, vals, PALETA[i%len(PALETA)]))
+    st.plotly_chart(grafico_linha(MESES_ABR, series_e, height=300), use_container_width=True)
 
     c1,c2,c3 = st.columns(3)
     with c1:
         st.markdown('<div class="sec-title">Saldo Acumulado por Setor</div>', unsafe_allow_html=True)
         acum2 = df_emp[df_emp["ano"]==ano_e].groupby("setor")["saldo"].sum().reset_index()
-        if not acum2.empty:
-            st.plotly_chart(grafico_barras([s[:16] for s in acum2["setor"]], acum2["saldo"].tolist(), 
-                                           height=260, horizontal=True), 
-                            use_container_width=True, key="emp_acumulado_setor")
-        else:
-            st.info("Sem dados acumulados.")
+        st.plotly_chart(grafico_barras(
+            [s[:16] for s in acum2["setor"]], acum2["saldo"].tolist(),
+            height=260, horizontal=True
+        ), use_container_width=True)
 
     with c2:
         st.markdown('<div class="sec-title">Comparativo Anual</div>', unsafe_allow_html=True)
         anual = df_emp.groupby("ano")["saldo"].sum().reset_index().sort_values("ano")
-        if not anual.empty:
-            st.plotly_chart(grafico_linha(anual["ano"].astype(str).tolist(), 
-                                          [("Saldo Total", anual["saldo"].tolist(), C1)], height=260), 
-                            use_container_width=True, key="emp_comparativo_anual")
-        else:
-            st.info("Sem dados para comparativo anual.")
+        st.plotly_chart(grafico_linha(
+            anual["ano"].astype(str).tolist(),
+            [("Saldo Total", anual["saldo"].tolist(), C1)], height=260
+        ), use_container_width=True)
 
     with c3:
         st.markdown('<div class="sec-title">Total Mensal</div>', unsafe_allow_html=True)
         mensal = dfe_ano.groupby("mes")["saldo"].sum().reindex(MESES_FULL, fill_value=0)
-        st.plotly_chart(grafico_barras(MESES_ABR, mensal.tolist(), height=260), 
-                        use_container_width=True, key="emp_total_mensal")
+        st.plotly_chart(grafico_barras(MESES_ABR, mensal.tolist(), height=260), use_container_width=True)
 
 # ═══════════════════════════════════════════════════════
 # ABA 2 — CADASTUR
 # ═══════════════════════════════════════════════════════
 with aba2:
     st.markdown('<p class="fonte">Fonte: Cadastro de Prestadores de Serviços Turísticos — MTur</p>', unsafe_allow_html=True)
-    
+
     anos_cad = sorted(df_cad["ano"].dropna().unique().tolist()) if not df_cad.empty else []
     cats_cad = sorted(df_cad["categoria"].dropna().unique().tolist()) if not df_cad.empty else []
-    
+
     f1,f2 = st.columns(2)
     with f1: ano_c = st.selectbox("Ano", anos_cad, index=len(anos_cad)-1 if anos_cad else 0, key="ac")
     with f2: cat_c = st.selectbox("Categoria", ["Todos"]+cats_cad, key="cc")
-    
+
     dfc = df_cad[df_cad["ano"]==ano_c].copy()
-    if not dfc.empty:
-        dfc["mes_idx"] = dfc["mes"].map(mes_idx)
-        dfc = dfc.sort_values("mes_idx")
-    
-    total_mes = dfc.groupby("mes")["quantidade"].sum().reindex(MESES_FULL, fill_value=0)
+    dfc["mes_idx"] = dfc["mes"].map(mes_idx)
+    dfc = dfc.sort_values("mes_idx")
+
+    total_mes = dfc.groupby("mes")["quantidade"].sum().reindex(MESES_FULL)
     total_v = total_mes.dropna()
-    
+
     st.markdown("---")
     k1,k2,k3,k4 = st.columns(4)
     k1.metric("Total Cadastros (pico)", f"{int(total_v.max()):,}".replace(",",".") if not total_v.empty else "—")
     k2.metric("Média Mensal", f"{int(total_v.mean()):,}".replace(",",".") if not total_v.empty else "—")
     k3.metric("Mês de Maior Cadastro", total_v.idxmax() if not total_v.empty else "—")
     k4.metric("Categorias Ativas", len(cats_cad))
-    
     st.markdown("---")
+
     st.markdown('<div class="sec-title">Evolução Total de Cadastros</div>', unsafe_allow_html=True)
-    st.plotly_chart(grafico_linha(MESES_ABR, [("Total", total_mes.tolist(), C1)], height=240), 
-                    use_container_width=True, key="cad_evolucao_total")
-    
+    st.plotly_chart(grafico_linha(MESES_ABR, [("Total", total_mes.tolist(), C1)], height=240), use_container_width=True)
+
     c1,c2 = st.columns(2)
     with c1:
         st.markdown('<div class="sec-title">Por Categoria</div>', unsafe_allow_html=True)
         cats_plot = cats_cad if cat_c=="Todos" else [cat_c]
         series_c = []
-        for i, cat in enumerate(cats_plot):
-            sub = dfc[dfc["categoria"] == cat].groupby("mes")["quantidade"].sum()
-            vals = [sub.get(m, None) for m in MESES_FULL]
-            series_c.append((cat, vals, PALETA[i % len(PALETA)]))
-        
-        st.plotly_chart(grafico_linha(MESES_ABR, series_c, height=260), 
-                        use_container_width=True, key="cad_por_categoria")
-    
+        for i,cat in enumerate(cats_plot):
+            sub = dfc[dfc["categoria"]==cat].set_index("mes")
+            vals = [sub.loc[m,"quantidade"] if m in sub.index else None for m in MESES_FULL]
+            series_c.append((cat, vals, PALETA[i%len(PALETA)]))
+        st.plotly_chart(grafico_linha(MESES_ABR, series_c, height=260), use_container_width=True)
+
     with c2:
         st.markdown('<div class="sec-title">Comparativo Anual</div>', unsafe_allow_html=True)
-        series_ac = []
-        for i, a in enumerate(sorted(df_cad["ano"].dropna().unique())):
-            valores = df_cad[df_cad["ano"]==a].groupby("mes")["quantidade"].sum().reindex(MESES_FULL, fill_value=0).tolist()
-            series_ac.append((str(a), valores, PALETA[i % len(PALETA)]))
-        
-        st.plotly_chart(grafico_linha(MESES_ABR, series_ac, height=260), 
-                        use_container_width=True, key="cad_comparativo_anual")
-    
+        anual_c = df_cad.groupby("ano")["quantidade"].sum().reset_index().sort_values("ano")
+        series_ac = [(str(a), df_cad[df_cad["ano"]==a].groupby("mes")["quantidade"].sum().reindex(MESES_FULL).tolist(), PALETA[i%len(PALETA)])
+                     for i,a in enumerate(sorted(df_cad["ano"].dropna().unique()))]
+        st.plotly_chart(grafico_linha(MESES_ABR, series_ac, height=260), use_container_width=True)
+
     st.markdown('<div class="sec-title">Ranking por Categoria (último valor disponível)</div>', unsafe_allow_html=True)
     rank = dfc.groupby("categoria")["quantidade"].last().sort_values(ascending=True)
-    if not rank.empty:
-        st.plotly_chart(grafico_barras(rank.index.tolist(), rank.values.tolist(), 
-                                       horizontal=True, height=280), 
-                        use_container_width=True, key="cad_ranking_categoria")
-    else:
-        st.info("Sem dados para ranking.")
+    st.plotly_chart(grafico_barras(rank.index.tolist(), rank.values.tolist(), horizontal=True, height=280), use_container_width=True)
 
 # ═══════════════════════════════════════════════════════
-# ABA 3 — FLUXO TURÍSTICO (mantida)
+# ABA 3 — FLUXO TURÍSTICO
 # ═══════════════════════════════════════════════════════
 with aba3:
     st.markdown('<p class="fonte">Fonte: ICMBio / Serra Verde Express / Itaipu / Parque Vila Velha</p>', unsafe_allow_html=True)
-    # ... (você pode colar aqui o conteúdo anterior da aba 3 se quiser)
+
+    atrativos = sorted(df_flx["atrativo"].dropna().unique().tolist()) if not df_flx.empty else []
+    anos_flx = sorted(df_flx["ano"].dropna().unique().tolist()) if not df_flx.empty else []
+
+    f1,f2,f3 = st.columns(3)
+    with f1: atrativo_f = st.selectbox("Atrativo", atrativos, key="atf")
+    with f2: ano_f = st.selectbox("Ano", anos_flx, index=len(anos_flx)-1 if anos_flx else 0, key="anf")
+    with f3:
+        dff_at = df_flx[(df_flx["atrativo"]==atrativo_f)&(df_flx["ano"]==ano_f)]
+        indicadores = sorted(dff_at["indicador"].dropna().unique().tolist())
+        ind_f = st.selectbox("Indicador", ["Todos"]+indicadores, key="inf")
+
+    dff = dff_at.copy()
+    dff["mes_idx"] = dff["mes"].map(mes_idx)
+    dff = dff.sort_values("mes_idx")
+
+    # Filtra apenas indicadores numéricos para os KPIs
+    dff_num = dff[pd.to_numeric(dff["valor"], errors="coerce").notna()]
+    total_f = soma(dff_num["valor"])
+
+    st.markdown("---")
+    k1,k2,k3,k4 = st.columns(4)
+    k1.metric("Total do Período", f"{int(total_f):,}".replace(",",".") if total_f>0 else "—")
+    k2.metric("Atrativo", atrativo_f)
+    k3.metric("Ano", str(ano_f))
+    k4.metric("Indicadores Disponíveis", len(indicadores))
+    st.markdown("---")
+
+    # Gráfico principal
+    st.markdown(f'<div class="sec-title">Evolução Mensal — {atrativo_f}</div>', unsafe_allow_html=True)
+    inds_plot = indicadores if ind_f=="Todos" else [ind_f]
+    # Filtra só indicadores numéricos para o gráfico
+    inds_num = []
+    for ind in inds_plot:
+        sub = dff[dff["indicador"]==ind]
+        if pd.to_numeric(sub["valor"], errors="coerce").notna().any():
+            inds_num.append(ind)
+
+    series_f = []
+    for i,ind in enumerate(inds_num[:6]):  # máx 6 linhas
+        sub = dff[dff["indicador"]==ind].set_index("mes")
+        vals = [pd.to_numeric(sub.loc[m,"valor"], errors="coerce") if m in sub.index else None for m in MESES_FULL]
+        series_f.append((ind, vals, PALETA[i%len(PALETA)]))
+
+    if series_f:
+        st.plotly_chart(grafico_linha(MESES_ABR, series_f, height=300), use_container_width=True)
+    else:
+        st.info("Selecione um indicador numérico para visualizar o gráfico.")
+
+    c1,c2 = st.columns(2)
+    with c1:
+        st.markdown('<div class="sec-title">Comparativo por Ano</div>', unsafe_allow_html=True)
+        if inds_num:
+            ind_comp = inds_num[0]
+            series_anos = []
+            for i,a in enumerate(anos_flx):
+                sub = df_flx[(df_flx["atrativo"]==atrativo_f)&(df_flx["ano"]==a)&(df_flx["indicador"]==ind_comp)].copy()
+                sub["mes_idx"] = sub["mes"].map(mes_idx)
+                sub = sub.sort_values("mes_idx").set_index("mes")
+                vals = [pd.to_numeric(sub.loc[m,"valor"], errors="coerce") if m in sub.index else None for m in MESES_FULL]
+                series_anos.append((str(a), vals, PALETA[i%len(PALETA)]))
+            st.plotly_chart(grafico_linha(MESES_ABR, series_anos, height=260), use_container_width=True)
+
+    with c2:
+        st.markdown('<div class="sec-title">Total por Indicador</div>', unsafe_allow_html=True)
+        rank_f = dff_num.groupby("indicador")["valor"].sum().sort_values()
+        if not rank_f.empty:
+            st.plotly_chart(grafico_barras(
+                [s[:22] for s in rank_f.index.tolist()],
+                rank_f.values.tolist(), horizontal=True, height=260
+            ), use_container_width=True)
 
 st.markdown("---")
 st.markdown(f'<p style="text-align:center;font-size:9px;color:{MUTED};letter-spacing:1px">'
