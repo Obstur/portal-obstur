@@ -32,8 +32,11 @@ C3 = "#1e6495"
 C4 = "#0a4b75"
 C5 = "#07385a"
 NEG = "#fb6f24"
-BG = "#eef6fb"
-BG2 = "#dcecf6"
+
+# Cores de fundo alteradas para cinza
+BG = "#f0f2f6" 
+BG2 = "#e0e4e8" 
+
 CARD = "#ffffff"
 BORDER = "#b8d2e4"
 TEXT = "#07385a"
