@@ -32,13 +32,11 @@ C2 = "#005bc5"  # Azul claro
 C3 = "#012677"  # Azul médio
 C4 = "#001449"  # Azul escuro
 
-NEG = "#e84624"
-BG = "#f0f2f6"  # Fundo geral cinza
-BG2 = "#e4e8ec" # Fundo cinza para abas
-CARD = "#ffffff" # Fundo branco
-BORDER = "#d1d5db"
-TEXT = "#000000" # Letras pretas
-MUTED = "#4b5563"
+BG = "#e0e0e0"       # Fundo geral 100% cinza
+BG_ABA = "#d6d6d6"   # Cinza escuro para a lista de abas
+CARD = "#ffffff"     # Fundo branco para gráficos e métricas
+TEXT = "#000000"     # Letras pretas
+BORDER = "#bcbcbc"
 
 PALETA = [C2, C3, C4, C1, "#3b82f6", "#1d4ed8", "#1e3a8a", "#f97316", "#93c5fd", "#60a5fa"]
 
@@ -51,6 +49,7 @@ MESES_FULL = [
 
 ORDEM_MES = {m: i for i, m in enumerate(MESES_FULL)}
 
+# CSS agressivo para forçar o layout cinza, gráficos brancos e letras pretas
 st.markdown(f"""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inclusive+Sans:ital,wght@0,300..700;1,300..700&display=swap');
@@ -63,6 +62,10 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"], .stApp {{
 
 * {{
     font-family: "Inclusive Sans", Arial, sans-serif !important;
+}}
+
+p, span, div, label, h1, h2, h3, h4, h5, h6, li {{
+    color: {TEXT} !important;
 }}
 
 [data-testid="stHeader"], [data-testid="stToolbar"] {{
@@ -78,87 +81,78 @@ section[data-testid="stSidebar"] {{
     display: none !important;
 }}
 
+/* Abas */
 .stTabs [data-baseweb="tab-list"] {{
-    background: {BG2} !important;
-    border-bottom: 2px solid {C3};
+    background-color: {BG_ABA} !important;
+    border-bottom: 2px solid {C3} !important;
     gap: 4px;
     padding: 8px 10px 0 10px;
     border-radius: 18px 18px 0 0;
-    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05);
 }}
 
 .stTabs [data-baseweb="tab"] {{
-    color: {MUTED} !important;
+    color: {TEXT} !important;
     font-weight: 600;
     font-size: 13px;
-    letter-spacing: 0;
     padding: 11px 22px;
     background: transparent !important;
-    border-radius: 14px 14px 0 0;
 }}
 
 .stTabs [aria-selected="true"] {{
-    color: {C4} !important;
+    color: {TEXT} !important;
     border-bottom: 3px solid {C1} !important;
-    background: transparent !important;
+    background: {BG} !important;
+    border-radius: 14px 14px 0 0;
 }}
 
 .stTabs [data-baseweb="tab-panel"] {{
-    background: {BG} !important;
+    background-color: {BG} !important;
     padding-top: 1.5rem;
 }}
 
-div[data-testid="metric-container"] {{
-    background: {CARD} !important;
+/* Caixa das Métricas Branca */
+[data-testid="stMetric"] {{
+    background-color: {CARD} !important;
     border: 1px solid {BORDER} !important;
     border-left: 5px solid {C1} !important;
-    border-radius: 18px !important;
+    border-radius: 12px !important;
     padding: 16px 18px !important;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
 }}
 
-div[data-testid="metric-container"] label {{
-    color: {MUTED} !important;
-    font-size: 11px !important;
+[data-testid="stMetricLabel"] * {{
+    font-size: 12px !important;
     text-transform: uppercase;
-    letter-spacing: 0;
+    font-weight: bold !important;
 }}
 
-div[data-testid="metric-container"] [data-testid="stMetricValue"] {{
-    color: {TEXT} !important;
-    font-size: 24px !important;
-    font-weight: 700 !important;
+[data-testid="stMetricValue"] * {{
+    font-size: 26px !important;
+    font-weight: 800 !important;
 }}
 
+/* Títulos das seções */
 .sec-title {{
-    font-size: 11px;
-    color: {MUTED};
+    font-size: 12px;
+    font-weight: bold;
+    color: {TEXT};
     text-transform: uppercase;
-    letter-spacing: 0.08em;
-    border-bottom: 1px solid {BORDER};
-    padding-bottom: 8px;
+    border-bottom: 2px solid {C1};
+    padding-bottom: 4px;
     margin: 18px 0 14px;
 }}
 
 .fonte {{
-    font-size: 10px;
-    color: {MUTED};
-    font-style: italic;
+    font-size: 11px;
+    font-weight: bold;
     margin-bottom: 8px;
 }}
 
-.stSelectbox label {{
-    color: {TEXT} !important;
-    font-size: 11px !important;
-    text-transform: uppercase;
-    font-weight: 600 !important;
-}}
-
-.stSelectbox > div > div {{
-    background: {CARD} !important;
+/* Selectbox Branca */
+[data-baseweb="select"] > div {{
+    background-color: {CARD} !important;
     border-color: {BORDER} !important;
-    color: {TEXT} !important;
-    border-radius: 12px !important;
+    border-radius: 8px !important;
 }}
 
 hr {{
@@ -274,29 +268,29 @@ def carregar_dados():
 
 def layout_base(height=280, title=""):
     layout = dict(
-        paper_bgcolor=CARD,
-        plot_bgcolor=CARD,
+        paper_bgcolor=CARD, # Fundo Branco para o gráfico
+        plot_bgcolor=CARD,  # Fundo Branco para a área de plotagem
         font=dict(color=TEXT, size=11, family="Inclusive Sans, Arial, sans-serif"),
         height=height,
         xaxis=dict(
-            gridcolor="rgba(209,213,219,0.45)",
+            gridcolor="rgba(0,0,0,0.1)",
             color=TEXT,
             showgrid=True,
             zeroline=False,
-            linecolor="rgba(209,213,219,0.75)",
+            linecolor="rgba(0,0,0,0.2)",
             ticks="outside",
-            tickcolor="rgba(209,213,219,0.75)",
+            tickcolor="rgba(0,0,0,0.2)",
         ),
         yaxis=dict(
-            gridcolor="rgba(209,213,219,0.45)",
+            gridcolor="rgba(0,0,0,0.1)",
             color=TEXT,
             showgrid=True,
             zeroline=True,
-            zerolinecolor=C1,
-            linecolor="rgba(209,213,219,0.75)",
+            zerolinecolor=C1, # Eixo zero em Laranja
+            linecolor="rgba(0,0,0,0.2)",
         ),
         legend=dict(
-            bgcolor="rgba(0,0,0,0)",
+            bgcolor="rgba(255,255,255,0.8)",
             borderwidth=0,
             font=dict(size=10, color=TEXT, family="Inclusive Sans, Arial, sans-serif"),
             orientation="h",
@@ -308,7 +302,7 @@ def layout_base(height=280, title=""):
         hoverlabel=dict(
             bgcolor=CARD,
             bordercolor=C1,
-            font=dict(color=TEXT, size=11, family="Inclusive Sans, Arial, sans-serif"),
+            font=dict(color=TEXT, size=12, family="Inclusive Sans, Arial, sans-serif"),
         ),
         hovermode="x unified",
         margin=dict(l=12, r=12, t=42 if title else 18, b=12),
@@ -355,7 +349,7 @@ def grafico_linha(labels, series, height=280):
 
 def grafico_barras(labels, valores, height=260, horizontal=False):
     vals = [float(v) if pd.notna(v) else 0 for v in valores]
-    cores = [C2 if v >= 0 else NEG for v in vals]
+    cores = [C2 if v >= 0 else C1 for v in vals]
 
     if horizontal:
         fig = go.Figure(go.Bar(
@@ -378,10 +372,10 @@ def grafico_barras(labels, valores, height=260, horizontal=False):
     lay["bargap"] = 0.34
 
     fig.update_layout(**lay)
-    fig.update_traces(opacity=0.92)
+    fig.update_traces(opacity=0.95)
 
     try:
-        fig.update_traces(marker_cornerradius=10)
+        fig.update_traces(marker_cornerradius=6)
     except Exception:
         pass
 
@@ -395,6 +389,7 @@ def serie_mensal(df, grupo, coluna_grupo, coluna_valor):
 
 df_emp, df_cad, df_flx = carregar_dados()
 
+# Iframe do cabeçalho também com fundo cinza
 components.html(
     f"""
 <!doctype html>
@@ -410,20 +405,18 @@ components.html(
     }}
     body {{
       margin: 0;
-      background: transparent;
+      background-color: {BG}; /* Fundo Cinza no Header também */
     }}
     .hero {{
       min-height: 118px;
       width: 100%;
-      border-radius: 24px;
+      border-radius: 16px;
       padding: 22px 30px;
       display: flex;
       align-items: center;
       gap: 24px;
-      background: #ffffff;
-      border: 1px solid #d1d5db;
-      border-left: 6px solid {C1};
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      background: {BG};
+      border-bottom: 4px solid {C1}; /* Detalhe Laranja */
     }}
     .logo {{
       width: 132px;
@@ -445,53 +438,29 @@ components.html(
       flex: 1 1 auto;
     }}
     .title {{
-      color: #000000;
-      font-size: 24px;
-      font-weight: 720;
+      color: {TEXT};
+      font-size: 26px;
+      font-weight: 800;
       line-height: 1.16;
       letter-spacing: 0;
     }}
     .subtitle {{
       margin-top: 8px;
-      color: #4b5563;
-      font-size: 12px;
-      line-height: 1.45;
-      letter-spacing: 0.08em;
+      color: {TEXT};
+      font-size: 13px;
+      font-weight: 600;
       text-transform: uppercase;
     }}
     .source {{
       flex: 0 0 auto;
-      border-radius: 999px;
-      border: 1px solid {C1};
-      background: rgba(232, 70, 36, 0.05);
-      color: #000000;
+      border-radius: 8px;
+      border: 2px solid {C1}; /* Borda Laranja */
+      background: transparent;
+      color: {TEXT};
+      font-weight: bold;
       padding: 8px 14px;
       font-size: 12px;
       white-space: nowrap;
-    }}
-    @media (max-width: 760px) {{
-      .hero {{
-        min-height: 168px;
-        align-items: flex-start;
-        flex-wrap: wrap;
-        padding: 20px;
-        gap: 16px;
-      }}
-      .logo {{
-        width: 112px;
-        height: 70px;
-        flex-basis: 112px;
-      }}
-      .logo img {{
-        max-width: 112px;
-        max-height: 70px;
-      }}
-      .source {{
-        margin-left: 128px;
-      }}
-      .title {{
-        font-size: 21px;
-      }}
     }}
   </style>
 </head>
@@ -509,17 +478,14 @@ components.html(
 </body>
 </html>
 """,
-    height=140,
+    height=130,
 )
 
 aba1, aba2, aba3 = st.tabs(["📊 Empregabilidade", "🏨 Cadastur", "✈️ Fluxo Turístico"])
 
 
 with aba1:
-    st.markdown(
-        '<p class="fonte">Fonte: SITU / Secretaria de Estado do Turismo - SETU</p>',
-        unsafe_allow_html=True
-    )
+    st.markdown('<p class="fonte">Fonte: SITU / Secretaria de Estado do Turismo - SETU</p>', unsafe_allow_html=True)
 
     if df_emp.empty:
         st.warning("Não foi possível carregar os dados de empregabilidade.")
@@ -576,44 +542,23 @@ with aba1:
 
         with c1:
             st.markdown('<div class="sec-title">Saldo Acumulado por Setor</div>', unsafe_allow_html=True)
-
             acum2 = acum.sort_values().reset_index()
-
             st.plotly_chart(
-                grafico_barras(
-                    [str(s)[:22] for s in acum2["setor"]],
-                    acum2["saldo"],
-                    height=280,
-                    horizontal=True
-                ),
+                grafico_barras([str(s)[:22] for s in acum2["setor"]], acum2["saldo"], height=280, horizontal=True),
                 use_container_width=True,
             )
 
         with c2:
             st.markdown('<div class="sec-title">Comparativo Anual</div>', unsafe_allow_html=True)
-
-            anual = (
-                df_emp.groupby("ano")["saldo"]
-                .sum(min_count=1)
-                .dropna()
-                .reset_index()
-                .sort_values("ano")
-            )
-
+            anual = df_emp.groupby("ano")["saldo"].sum(min_count=1).dropna().reset_index().sort_values("ano")
             st.plotly_chart(
-                grafico_linha(
-                    anual["ano"].astype(str).tolist(),
-                    [("Saldo Total", anual["saldo"].tolist(), C3)],
-                    height=280
-                ),
+                grafico_linha(anual["ano"].astype(str).tolist(), [("Saldo Total", anual["saldo"].tolist(), C3)], height=280),
                 use_container_width=True,
             )
 
         with c3:
             st.markdown('<div class="sec-title">Total Mensal</div>', unsafe_allow_html=True)
-
             mensal = dfe_ano.groupby("mes")["saldo"].sum(min_count=1).reindex(MESES_FULL)
-
             st.plotly_chart(
                 grafico_barras(MESES_ABR, mensal.tolist(), height=280),
                 use_container_width=True
@@ -621,10 +566,7 @@ with aba1:
 
 
 with aba2:
-    st.markdown(
-        '<p class="fonte">Fonte: Cadastro de Prestadores de Serviços Turísticos - MTur</p>',
-        unsafe_allow_html=True
-    )
+    st.markdown('<p class="fonte">Fonte: Cadastro de Prestadores de Serviços Turísticos - MTur</p>', unsafe_allow_html=True)
 
     if df_cad.empty:
         st.warning("Não foi possível carregar os dados do Cadastur.")
@@ -669,46 +611,25 @@ with aba2:
 
         with c1:
             st.markdown('<div class="sec-title">Por Categoria</div>', unsafe_allow_html=True)
-
             base_cats = df_cad[df_cad["ano"] == ano_c].copy()
             cats_plot = cats_cad if cat_c == "Todos" else [cat_c]
-
             series_c = [
                 (cat, serie_mensal(base_cats, cat, "categoria", "quantidade"), PALETA[i % len(PALETA)])
                 for i, cat in enumerate(cats_plot)
             ]
-
             st.plotly_chart(grafico_linha(MESES_ABR, series_c, height=280), use_container_width=True)
 
         with c2:
             st.markdown('<div class="sec-title">Comparativo Anual</div>', unsafe_allow_html=True)
-
             series_ac = []
-
             for i, ano in enumerate(anos_cad):
                 base_ano = df_cad[df_cad["ano"] == ano]
-                vals = (
-                    base_ano.groupby("mes")["quantidade"]
-                    .sum(min_count=1)
-                    .reindex(MESES_FULL)
-                    .tolist()
-                )
-
+                vals = base_ano.groupby("mes")["quantidade"].sum(min_count=1).reindex(MESES_FULL).tolist()
                 series_ac.append((str(ano), vals, PALETA[i % len(PALETA)]))
-
             st.plotly_chart(grafico_linha(MESES_ABR, series_ac, height=280), use_container_width=True)
 
         st.markdown('<div class="sec-title">Ranking por Categoria (último valor disponível)</div>', unsafe_allow_html=True)
-
-        rank = (
-            df_cad[df_cad["ano"] == ano_c]
-            .dropna(subset=["quantidade"])
-            .sort_values(["categoria", "mes"], key=lambda s: s.map(ORDEM_MES) if s.name == "mes" else s)
-            .groupby("categoria")["quantidade"]
-            .last()
-            .sort_values()
-        )
-
+        rank = df_cad[df_cad["ano"] == ano_c].dropna(subset=["quantidade"]).sort_values(["categoria", "mes"], key=lambda s: s.map(ORDEM_MES) if s.name == "mes" else s).groupby("categoria")["quantidade"].last().sort_values()
         st.plotly_chart(
             grafico_barras(rank.index.tolist(), rank.values.tolist(), horizontal=True, height=300),
             use_container_width=True
@@ -716,10 +637,7 @@ with aba2:
 
 
 with aba3:
-    st.markdown(
-        '<p class="fonte">Fonte: ICMBio / Serra Verde Express / Itaipu / Parque Vila Velha</p>',
-        unsafe_allow_html=True
-    )
+    st.markdown('<p class="fonte">Fonte: ICMBio / Serra Verde Express / Itaipu / Parque Vila Velha</p>', unsafe_allow_html=True)
 
     if df_flx.empty:
         st.warning("Não foi possível carregar os dados de fluxo turístico.")
@@ -735,14 +653,8 @@ with aba3:
         with f2:
             ano_f = st.selectbox("Ano", anos_flx, index=len(anos_flx) - 1, key="anf")
 
-        dff_at = df_flx[
-            (df_flx["atrativo"] == atrativo_f) &
-            (df_flx["ano"] == ano_f)
-        ].copy()
-
-        indicadores = sorted(
-            dff_at.dropna(subset=["valor"])["indicador"].dropna().unique().tolist()
-        )
+        dff_at = df_flx[(df_flx["atrativo"] == atrativo_f) & (df_flx["ano"] == ano_f)].copy()
+        indicadores = sorted(dff_at.dropna(subset=["valor"])["indicador"].dropna().unique().tolist())
 
         with f3:
             ind_f = st.selectbox("Indicador", ["Todos"] + indicadores, key="inf")
@@ -763,7 +675,6 @@ with aba3:
         st.markdown(f'<div class="sec-title">Evolução Mensal - {atrativo_f}</div>', unsafe_allow_html=True)
 
         inds_plot = indicadores if ind_f == "Todos" else [ind_f]
-
         series_f = [
             (ind, serie_mensal(dff_at, ind, "indicador", "valor"), PALETA[i % len(PALETA)])
             for i, ind in enumerate(inds_plot[:8])
@@ -778,55 +689,28 @@ with aba3:
 
         with c1:
             st.markdown('<div class="sec-title">Comparativo por Ano</div>', unsafe_allow_html=True)
-
             if inds_plot:
                 ind_comp = inds_plot[0]
                 series_anos = []
-
                 for i, ano in enumerate(anos_flx):
-                    base = df_flx[
-                        (df_flx["atrativo"] == atrativo_f) &
-                        (df_flx["ano"] == ano) &
-                        (df_flx["indicador"] == ind_comp)
-                    ]
-
-                    vals = (
-                        base.groupby("mes")["valor"]
-                        .sum(min_count=1)
-                        .reindex(MESES_FULL)
-                        .tolist()
-                    )
-
+                    base = df_flx[(df_flx["atrativo"] == atrativo_f) & (df_flx["ano"] == ano) & (df_flx["indicador"] == ind_comp)]
+                    vals = base.groupby("mes")["valor"].sum(min_count=1).reindex(MESES_FULL).tolist()
                     series_anos.append((str(ano), vals, PALETA[i % len(PALETA)]))
-
                 st.plotly_chart(grafico_linha(MESES_ABR, series_anos, height=280), use_container_width=True)
 
         with c2:
             st.markdown('<div class="sec-title">Total por Indicador</div>', unsafe_allow_html=True)
-
-            rank_f = (
-                dff_at.dropna(subset=["valor"])
-                .groupby("indicador")["valor"]
-                .sum()
-                .sort_values()
-            )
-
+            rank_f = dff_at.dropna(subset=["valor"]).groupby("indicador")["valor"].sum().sort_values()
             if not rank_f.empty:
                 st.plotly_chart(
-                    grafico_barras(
-                        [str(s)[:26] for s in rank_f.index],
-                        rank_f.values,
-                        horizontal=True,
-                        height=280
-                    ),
+                    grafico_barras([str(s)[:26] for s in rank_f.index], rank_f.values, horizontal=True, height=280),
                     use_container_width=True,
                 )
-
 
 st.markdown("---")
 
 st.markdown(
-    f'<p style="text-align:center;font-size:10px;color:{MUTED};letter-spacing:0.04em">'
+    f'<p style="text-align:center;font-size:10px;font-weight:bold;color:{TEXT};letter-spacing:0.04em">'
     f'OBSERVATÓRIO DE TURISMO · UFPR · Fonte: SITU / SETU / ICMBio · 2023-2026</p>',
     unsafe_allow_html=True,
 )
