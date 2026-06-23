@@ -1,6 +1,3 @@
-Copie **somente o conteúdo dentro do bloco**. Não copie as linhas de três crases.
-
-```python
 """
 OBSERVATÓRIO DE TURISMO — UFPR
 Painel único | Empregabilidade · Cadastur · Fluxo Turístico
@@ -835,4 +832,3 @@ st.markdown(
     f'OBSERVATÓRIO DE TURISMO · UFPR · Fonte: SITU / SETU / ICMBio · 2023-2026</p>',
     unsafe_allow_html=True,
 )
-```
