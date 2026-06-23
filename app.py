@@ -1,3 +1,6 @@
+Copie **somente o conteúdo dentro do bloco**. Não copie as linhas de três crases.
+
+```python
 """
 OBSERVATÓRIO DE TURISMO — UFPR
 Painel único | Empregabilidade · Cadastur · Fluxo Turístico
@@ -10,6 +13,7 @@ import unicodedata
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+import streamlit.components.v1 as components
 
 
 LOGO_URL = "https://raw.githubusercontent.com/Obstur/portal-obstur/main/.devcontainer/logo.jpg"
@@ -31,7 +35,6 @@ C3 = "#1e6495"
 C4 = "#0a4b75"
 C5 = "#07385a"
 NEG = "#fb6f24"
-
 BG = "#eef6fb"
 BG2 = "#dcecf6"
 CARD = "#ffffff"
@@ -78,71 +81,6 @@ html, body, [data-testid="stAppViewContainer"], [data-testid="stApp"], .stApp {{
 
 section[data-testid="stSidebar"] {{
     display: none !important;
-}}
-
-.app-hero {{
-    background: linear-gradient(135deg, {C4}, {C5});
-    padding: 22px 30px;
-    border-radius: 22px;
-    border-bottom: 3px solid {C1};
-    display: flex;
-    align-items: center;
-    gap: 22px;
-    margin: 10px 0 24px 0;
-    min-height: 108px;
-    box-shadow: 0 18px 38px rgba(10, 75, 117, 0.20);
-}}
-
-.app-logo {{
-    width: 116px;
-    height: 76px;
-    min-width: 116px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    overflow: visible;
-}}
-
-.app-logo img {{
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    mix-blend-mode: multiply;
-    filter: contrast(1.08) saturate(1.05);
-}}
-
-.app-title-wrap {{
-    min-width: 0;
-    flex: 1;
-}}
-
-.app-title {{
-    color: white;
-    font-size: 22px;
-    font-weight: 700;
-    letter-spacing: 0;
-    line-height: 1.25;
-}}
-
-.app-subtitle {{
-    color: #c8e2f2;
-    font-size: 11px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    margin-top: 7px;
-    line-height: 1.45;
-}}
-
-.app-source {{
-    flex: 0 0 auto;
-    color: #ffd8c4;
-    border: 1px solid {C1};
-    background: rgba(251, 111, 36, 0.14);
-    padding: 7px 14px;
-    border-radius: 999px;
-    font-size: 11px;
-    white-space: nowrap;
 }}
 
 .stTabs [data-baseweb="tab-list"] {{
@@ -229,29 +167,6 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {{
 
 hr {{
     border-color: {BORDER} !important;
-}}
-
-@media (max-width: 760px) {{
-    .block-container {{
-        padding: 1rem 0.75rem 2rem 0.75rem !important;
-    }}
-
-    .app-hero {{
-        align-items: flex-start;
-        flex-wrap: wrap;
-        padding: 20px 18px;
-        min-height: 150px;
-    }}
-
-    .app-logo {{
-        width: 96px;
-        height: 64px;
-        min-width: 96px;
-    }}
-
-    .app-source {{
-        margin-left: 118px;
-    }}
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -363,30 +278,29 @@ def carregar_dados():
 
 def layout_base(height=280, title=""):
     layout = dict(
-        paper_bgcolor=BG,
-        plot_bgcolor=BG2,
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="#ffffff",
         font=dict(color=TEXT, size=11, family="Inclusive Sans, Arial, sans-serif"),
         height=height,
         xaxis=dict(
-            gridcolor=BORDER,
+            gridcolor="rgba(184,210,228,0.45)",
             color=MUTED,
             showgrid=True,
             zeroline=False,
-            linecolor=BORDER,
+            linecolor="rgba(184,210,228,0.75)",
             ticks="outside",
-            tickcolor=BORDER,
+            tickcolor="rgba(184,210,228,0.75)",
         ),
         yaxis=dict(
-            gridcolor=BORDER,
+            gridcolor="rgba(184,210,228,0.45)",
             color=MUTED,
             showgrid=True,
             zeroline=True,
-            zerolinecolor=BORDER,
-            linecolor=BORDER,
+            zerolinecolor="rgba(251,111,36,0.32)",
+            linecolor="rgba(184,210,228,0.75)",
         ),
         legend=dict(
             bgcolor="rgba(0,0,0,0)",
-            bordercolor=BORDER,
             borderwidth=0,
             font=dict(size=10, color=TEXT, family="Inclusive Sans, Arial, sans-serif"),
             orientation="h",
@@ -396,12 +310,12 @@ def layout_base(height=280, title=""):
             x=0,
         ),
         hoverlabel=dict(
-            bgcolor=CARD,
+            bgcolor="#ffffff",
             bordercolor=C1,
             font=dict(color=TEXT, size=11, family="Inclusive Sans, Arial, sans-serif"),
         ),
         hovermode="x unified",
-        margin=dict(l=10, r=10, t=36 if title else 14, b=10),
+        margin=dict(l=12, r=12, t=42 if title else 18, b=12),
     )
 
     if title:
@@ -428,7 +342,7 @@ def grafico_linha(labels, series, height=280):
             name=str(nome),
             mode="lines+markers",
             line=dict(color=cor, width=3, shape="spline", smoothing=0.95),
-            marker=dict(size=7, color="white", line=dict(width=2, color=cor)),
+            marker=dict(size=7, color="#ffffff", line=dict(width=2, color=cor)),
             connectgaps=False,
             fill="tozeroy" if len(series) == 1 else "none",
             fillcolor=f"rgba({r},{g},{b},0.14)",
@@ -465,10 +379,15 @@ def grafico_barras(labels, valores, height=260, horizontal=False):
 
     lay = layout_base(height=height)
     lay["showlegend"] = False
-    lay["bargap"] = 0.32
+    lay["bargap"] = 0.34
 
     fig.update_layout(**lay)
-    fig.update_traces(marker_line_width=0, opacity=0.92)
+    fig.update_traces(opacity=0.92)
+
+    try:
+        fig.update_traces(marker_cornerradius=10)
+    except Exception:
+        pass
 
     return fig
 
@@ -480,26 +399,123 @@ def serie_mensal(df, grupo, coluna_grupo, coluna_valor):
 
 df_emp, df_cad, df_flx = carregar_dados()
 
-st.markdown(f"""
-<div class="app-hero">
-    <div class="app-logo">
-        <img src="{LOGO_URL}" alt="Logo Observatório de Turismo">
+components.html(
+    f"""
+<!doctype html>
+<html>
+<head>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inclusive+Sans:ital,wght@0,300..700;1,300..700&display=swap" rel="stylesheet">
+  <style>
+    * {{
+      box-sizing: border-box;
+      font-family: "Inclusive Sans", Arial, sans-serif;
+    }}
+    body {{
+      margin: 0;
+      background: transparent;
+    }}
+    .hero {{
+      min-height: 118px;
+      width: 100%;
+      border-radius: 24px;
+      padding: 22px 30px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      background:
+        radial-gradient(circle at 94% 18%, rgba(251, 111, 36, 0.20), transparent 28%),
+        linear-gradient(135deg, #f7f9fb 0%, #e6edf2 100%);
+      border: 1px solid #d7e1e8;
+      box-shadow: 0 18px 42px rgba(10, 75, 117, 0.13);
+    }}
+    .logo {{
+      width: 132px;
+      height: 82px;
+      flex: 0 0 132px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }}
+    .logo img {{
+      max-width: 132px;
+      max-height: 82px;
+      object-fit: contain;
+      mix-blend-mode: multiply;
+      filter: contrast(1.08) saturate(1.05);
+    }}
+    .copy {{
+      min-width: 0;
+      flex: 1 1 auto;
+    }}
+    .title {{
+      color: #0a4b75;
+      font-size: 24px;
+      font-weight: 720;
+      line-height: 1.16;
+      letter-spacing: 0;
+    }}
+    .subtitle {{
+      margin-top: 8px;
+      color: #517992;
+      font-size: 12px;
+      line-height: 1.45;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }}
+    .source {{
+      flex: 0 0 auto;
+      border-radius: 999px;
+      border: 1px solid rgba(251, 111, 36, 0.40);
+      background: rgba(251, 111, 36, 0.10);
+      color: #0a4b75;
+      padding: 8px 14px;
+      font-size: 12px;
+      white-space: nowrap;
+    }}
+    @media (max-width: 760px) {{
+      .hero {{
+        min-height: 168px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        padding: 20px;
+        gap: 16px;
+      }}
+      .logo {{
+        width: 112px;
+        height: 70px;
+        flex-basis: 112px;
+      }}
+      .logo img {{
+        max-width: 112px;
+        max-height: 70px;
+      }}
+      .source {{
+        margin-left: 128px;
+      }}
+      .title {{
+        font-size: 21px;
+      }}
+    }}
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <div class="logo">
+      <img src="{LOGO_URL}" alt="Logo Observatório de Turismo">
     </div>
-
-    <div class="app-title-wrap">
-        <div class="app-title">
-            OBSERVATÓRIO DE TURISMO · UFPR
-        </div>
-        <div class="app-subtitle">
-            Sistema de Inteligência Turística do Paraná · SITU / SETU
-        </div>
+    <div class="copy">
+      <div class="title">OBSERVATÓRIO DE TURISMO · UFPR</div>
+      <div class="subtitle">Sistema de Inteligência Turística do Paraná · SITU / SETU</div>
     </div>
-
-    <div class="app-source">
-        Fonte: SITU / SETU · 2023-2026
-    </div>
-</div>
-""", unsafe_allow_html=True)
+    <div class="source">Fonte: SITU / SETU · 2023-2026</div>
+  </section>
+</body>
+</html>
+""",
+    height=140,
+)
 
 aba1, aba2, aba3 = st.tabs(["📊 Empregabilidade", "🏨 Cadastur", "✈️ Fluxo Turístico"])
 
@@ -819,3 +835,4 @@ st.markdown(
     f'OBSERVATÓRIO DE TURISMO · UFPR · Fonte: SITU / SETU / ICMBio · 2023-2026</p>',
     unsafe_allow_html=True,
 )
+```
