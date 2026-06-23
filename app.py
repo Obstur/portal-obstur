@@ -819,4 +819,3 @@ st.markdown(
     f'OBSERVATÓRIO DE TURISMO · UFPR · Fonte: SITU / SETU / ICMBio · 2023-2026</p>',
     unsafe_allow_html=True,
 )
-```
