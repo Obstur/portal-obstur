@@ -15,9 +15,12 @@ import plotly.graph_objects as go
 import streamlit as st
 
 
+LOGO_URL = "https://raw.githubusercontent.com/Obstur/portal-obstur/main/.devcontainer/logo.jpg"
+
+
 st.set_page_config(
     page_title="Observatorio de Turismo - UFPR",
-    page_icon="🧭",
+    page_icon=LOGO_URL,
     layout="wide",
     initial_sidebar_state="collapsed",
 )
@@ -177,17 +180,22 @@ div[style*="linear-gradient(135deg"] > div:last-child {{
     flex-shrink: 0 !important;
 }}
 .app-hero-icon {{
-    width: 42px;
-    height: 42px;
-    min-width: 42px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     background: rgba(255, 255, 255, 0.14);
     border: 1px solid rgba(255, 255, 255, 0.24);
-    font-size: 24px;
-    line-height: 1;
+    overflow: hidden;
+}}
+.app-hero-icon img {{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
 }}
 .app-hero-copy {{
     min-width: 0;
@@ -365,13 +373,39 @@ def layout_base(height=280, title=""):
     layout = dict(
         paper_bgcolor=BG,
         plot_bgcolor=BG2,
-        font=dict(color=TEXT, size=11),
+        font=dict(color=TEXT, size=11, family="Helvetica, Arial, sans-serif"),
         height=height,
-        xaxis=dict(gridcolor=BORDER, color=MUTED, showgrid=True, zeroline=False),
-        yaxis=dict(gridcolor=BORDER, color=MUTED, showgrid=True, zeroline=True, zerolinecolor=BORDER),
-        legend=dict(bgcolor=BG2, bordercolor=BORDER, borderwidth=1, font=dict(size=10, color=TEXT)),
-        hoverlabel=dict(bgcolor=CARD, bordercolor=C1, font=dict(color=TEXT)),
-        margin=dict(l=10, r=10, t=36 if title else 10, b=10),
+        xaxis=dict(
+            gridcolor=BORDER,
+            color=MUTED,
+            showgrid=True,
+            zeroline=False,
+            linecolor=BORDER,
+            ticks="outside",
+            tickcolor=BORDER,
+        ),
+        yaxis=dict(
+            gridcolor=BORDER,
+            color=MUTED,
+            showgrid=True,
+            zeroline=True,
+            zerolinecolor=BORDER,
+            linecolor=BORDER,
+        ),
+        legend=dict(
+            bgcolor="rgba(0,0,0,0)",
+            bordercolor=BORDER,
+            borderwidth=0,
+            font=dict(size=10, color=TEXT),
+            orientation="h",
+            yanchor="bottom",
+            y=1.02,
+            xanchor="left",
+            x=0,
+        ),
+        hoverlabel=dict(bgcolor=CARD, bordercolor=C1, font=dict(color=TEXT, size=11)),
+        hovermode="x unified",
+        margin=dict(l=10, r=10, t=36 if title else 14, b=10),
     )
     if title:
         layout["title"] = dict(text=title, font=dict(size=12, color=TEXT), x=0)
@@ -394,14 +428,17 @@ def grafico_linha(labels, series, height=280):
                 y=y,
                 name=str(nome),
                 mode="lines+markers",
-                line=dict(color=cor, width=2.5),
-                marker=dict(size=6, color=cor),
+                line=dict(color=cor, width=3, shape="spline", smoothing=0.95),
+                marker=dict(size=7, color="white", line=dict(width=2, color=cor)),
                 connectgaps=False,
                 fill="tozeroy" if len(series) == 1 else "none",
-                fillcolor=f"rgba({r},{g},{b},0.12)",
+                fillcolor=f"rgba({r},{g},{b},0.14)",
+                hovertemplate="%{y:,.0f}<extra>" + str(nome) + "</extra>",
             )
         )
     fig.update_layout(**layout_base(height=height))
+    if len(series) <= 1:
+        fig.update_layout(showlegend=False)
     return fig
 
 
@@ -410,13 +447,30 @@ def grafico_barras(labels, valores, height=260, horizontal=False):
     cores = [C2 if v >= 0 else NEG for v in vals]
 
     if horizontal:
-        fig = go.Figure(go.Bar(y=labels, x=vals, orientation="h", marker_color=cores, marker_line_width=0))
+        fig = go.Figure(
+            go.Bar(
+                y=labels,
+                x=vals,
+                orientation="h",
+                marker=dict(color=cores, line=dict(width=0)),
+                hovertemplate="%{x:,.0f}<extra></extra>",
+            )
+        )
     else:
-        fig = go.Figure(go.Bar(x=labels, y=vals, marker_color=cores, marker_line_width=0))
+        fig = go.Figure(
+            go.Bar(
+                x=labels,
+                y=vals,
+                marker=dict(color=cores, line=dict(width=0)),
+                hovertemplate="%{y:,.0f}<extra></extra>",
+            )
+        )
 
     lay = layout_base(height=height)
     lay["showlegend"] = False
+    lay["bargap"] = 0.32
     fig.update_layout(**lay)
+    fig.update_traces(marker_line_width=0, opacity=0.92)
     return fig
 
 
@@ -437,7 +491,9 @@ st.markdown(
 <div style="background:linear-gradient(135deg,{C4},{C5});padding:18px 28px;
 border-radius:0 0 16px 16px;border-bottom:3px solid {C1};
 display:flex;align-items:center;gap:16px;margin-bottom:24px;">
-  <span style="font-size:30px">🧭</span>
+  <div class="app-hero-icon">
+    <img src="{LOGO_URL}" alt="Logo Observatorio de Turismo" />
+  </div>
   <div>
     <div style="color:white;font-size:19px;font-weight:700;letter-spacing:1px;">
       OBSERVATORIO DE TURISMO · UFPR
