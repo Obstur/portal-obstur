@@ -26,26 +26,21 @@ URL_CAD = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQIJaja_RfMVmdabkhm5Q
 URL_EMP = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQqGPUme21AUn8I9-rhiW-fyWOIAU03Rp48B7bB1oywwZWXZWjaYpFqgXDa9XBIjfa7Roh4cI-sPx4i/pub?output=csv"
 URL_FLX = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRJm-ju6hjisM-TzBsOv1g--vyh_sKd8g_TP8IH50211oZSPyJPVT8P24UFUFvtm9gkqZugsg98nbez/pub?output=csv"
 
-C1 = "#fb6f24"
-C2 = "#5191c1"
-C3 = "#1e6495"
-C4 = "#0a4b75"
-C5 = "#07385a"
-NEG = "#fb6f24"
+# Cores e Paleta ajustadas
+C1 = "#e84624"  # Laranja
+C2 = "#005bc5"  # Azul claro
+C3 = "#012677"  # Azul médio
+C4 = "#001449"  # Azul escuro
 
-# Cores de fundo alteradas para cinza
-BG = "#f0f2f6" 
-BG2 = "#e0e4e8" 
+NEG = "#e84624"
+BG = "#f0f2f6"  # Fundo geral cinza
+BG2 = "#e4e8ec" # Fundo cinza para abas
+CARD = "#ffffff" # Fundo branco
+BORDER = "#d1d5db"
+TEXT = "#000000" # Letras pretas
+MUTED = "#4b5563"
 
-CARD = "#ffffff"
-BORDER = "#b8d2e4"
-TEXT = "#07385a"
-MUTED = "#517992"
-
-PALETA = [
-    C3, C2, C4, "#6fa7cf", "#95bdd9",
-    C1, "#2f789f", "#0e557f", "#f99255", "#b9d7ea"
-]
+PALETA = [C2, C3, C4, C1, "#3b82f6", "#1d4ed8", "#1e3a8a", "#f97316", "#93c5fd", "#60a5fa"]
 
 MESES_ABR = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
 
@@ -89,7 +84,7 @@ section[data-testid="stSidebar"] {{
     gap: 4px;
     padding: 8px 10px 0 10px;
     border-radius: 18px 18px 0 0;
-    box-shadow: inset 0 -1px 0 rgba(10, 75, 117, 0.12);
+    box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.05);
 }}
 
 .stTabs [data-baseweb="tab"] {{
@@ -119,7 +114,7 @@ div[data-testid="metric-container"] {{
     border-left: 5px solid {C1} !important;
     border-radius: 18px !important;
     padding: 16px 18px !important;
-    box-shadow: 0 12px 28px rgba(10, 75, 117, 0.10) !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05) !important;
 }}
 
 div[data-testid="metric-container"] label {{
@@ -130,7 +125,7 @@ div[data-testid="metric-container"] label {{
 }}
 
 div[data-testid="metric-container"] [data-testid="stMetricValue"] {{
-    color: {C4} !important;
+    color: {TEXT} !important;
     font-size: 24px !important;
     font-weight: 700 !important;
 }}
@@ -153,13 +148,14 @@ div[data-testid="metric-container"] [data-testid="stMetricValue"] {{
 }}
 
 .stSelectbox label {{
-    color: {MUTED} !important;
+    color: {TEXT} !important;
     font-size: 11px !important;
     text-transform: uppercase;
+    font-weight: 600 !important;
 }}
 
 .stSelectbox > div > div {{
-    background: #ffffff !important;
+    background: {CARD} !important;
     border-color: {BORDER} !important;
     color: {TEXT} !important;
     border-radius: 12px !important;
@@ -278,26 +274,26 @@ def carregar_dados():
 
 def layout_base(height=280, title=""):
     layout = dict(
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="#ffffff",
+        paper_bgcolor=CARD,
+        plot_bgcolor=CARD,
         font=dict(color=TEXT, size=11, family="Inclusive Sans, Arial, sans-serif"),
         height=height,
         xaxis=dict(
-            gridcolor="rgba(184,210,228,0.45)",
-            color=MUTED,
+            gridcolor="rgba(209,213,219,0.45)",
+            color=TEXT,
             showgrid=True,
             zeroline=False,
-            linecolor="rgba(184,210,228,0.75)",
+            linecolor="rgba(209,213,219,0.75)",
             ticks="outside",
-            tickcolor="rgba(184,210,228,0.75)",
+            tickcolor="rgba(209,213,219,0.75)",
         ),
         yaxis=dict(
-            gridcolor="rgba(184,210,228,0.45)",
-            color=MUTED,
+            gridcolor="rgba(209,213,219,0.45)",
+            color=TEXT,
             showgrid=True,
             zeroline=True,
-            zerolinecolor="rgba(251,111,36,0.32)",
-            linecolor="rgba(184,210,228,0.75)",
+            zerolinecolor=C1,
+            linecolor="rgba(209,213,219,0.75)",
         ),
         legend=dict(
             bgcolor="rgba(0,0,0,0)",
@@ -310,7 +306,7 @@ def layout_base(height=280, title=""):
             x=0,
         ),
         hoverlabel=dict(
-            bgcolor="#ffffff",
+            bgcolor=CARD,
             bordercolor=C1,
             font=dict(color=TEXT, size=11, family="Inclusive Sans, Arial, sans-serif"),
         ),
@@ -342,7 +338,7 @@ def grafico_linha(labels, series, height=280):
             name=str(nome),
             mode="lines+markers",
             line=dict(color=cor, width=3, shape="spline", smoothing=0.95),
-            marker=dict(size=7, color="#ffffff", line=dict(width=2, color=cor)),
+            marker=dict(size=7, color=CARD, line=dict(width=2, color=cor)),
             connectgaps=False,
             fill="tozeroy" if len(series) == 1 else "none",
             fillcolor=f"rgba({r},{g},{b},0.14)",
@@ -424,11 +420,10 @@ components.html(
       display: flex;
       align-items: center;
       gap: 24px;
-      background:
-        radial-gradient(circle at 94% 18%, rgba(251, 111, 36, 0.20), transparent 28%),
-        linear-gradient(135deg, #f7f9fb 0%, #e6edf2 100%);
-      border: 1px solid #d7e1e8;
-      box-shadow: 0 18px 42px rgba(10, 75, 117, 0.13);
+      background: #ffffff;
+      border: 1px solid #d1d5db;
+      border-left: 6px solid {C1};
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
     }}
     .logo {{
       width: 132px;
@@ -450,7 +445,7 @@ components.html(
       flex: 1 1 auto;
     }}
     .title {{
-      color: #0a4b75;
+      color: #000000;
       font-size: 24px;
       font-weight: 720;
       line-height: 1.16;
@@ -458,7 +453,7 @@ components.html(
     }}
     .subtitle {{
       margin-top: 8px;
-      color: #517992;
+      color: #4b5563;
       font-size: 12px;
       line-height: 1.45;
       letter-spacing: 0.08em;
@@ -467,9 +462,9 @@ components.html(
     .source {{
       flex: 0 0 auto;
       border-radius: 999px;
-      border: 1px solid rgba(251, 111, 36, 0.40);
-      background: rgba(251, 111, 36, 0.10);
-      color: #0a4b75;
+      border: 1px solid {C1};
+      background: rgba(232, 70, 36, 0.05);
+      color: #000000;
       padding: 8px 14px;
       font-size: 12px;
       white-space: nowrap;
